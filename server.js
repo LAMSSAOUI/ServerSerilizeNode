@@ -6,16 +6,34 @@ const serialize = require('node-serialize'); // Using node-serialize for seriali
 const app = express();
 const port = 3000;
 
+const validEmails = ['user1@example.com', 'user2@example.com'];
+
+app.use((req, res, next) => {
+    res.setHeader('Access-Control-Allow-Origin', 'http://127.0.0.1:5500');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+    next();
+});
+
 app.use(bodyParser.json());
 
-app.post('/api/serialize', (req, res) => {
-    const serializedData = req.body.data;
-    const deserializedData = serialize.unserialize(serializedData); // Deserialize input data
-    
-    // Dangerous operation: executing arbitrary code
-    console.log(deserializedData); // This will execute any code passed as the serialized object
+app.post('/api/login', (req, res) => {
+    const { username, role, password } = req.body;
+    console.log('username now is password', username, password);
 
-    res.send('Data processed successfully');
+    if (validEmails.includes(username)) {
+        if (role === 'admin') {
+            res.send('valid email and admin'); // Send response for admin role
+        } else {
+            res.send('valid email and user '); // Send response for non-admin role
+        }
+    } else {
+        res.send('Invalid email. Please try again.');
+    }
+});
+
+app.get('/dashboard', (req, res) => {
+    res.send('Welcome to the dashboard!');
 });
 
 app.listen(port, () => {
