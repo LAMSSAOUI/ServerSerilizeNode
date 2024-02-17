@@ -91,11 +91,10 @@ app.use(bodyParser.json()); // Use bodyParser.json() to parse JSON bodies
 app.use(cookieParser())
 app.post('/api/login', (req, res) => {
     const serializedData = req.body; // Assuming the data is sent as JSON
-
-    console.log('The serialized data is:', serializedData);
+    console.log('The serialized data is:', serializedData.data);
 
     // Deserialize the serialized data
-    const deserializedData = serialize.unserialize(serializedData)
+    const deserializedData = serialize.unserialize(serializedData.data)
     // const deserializedData = deserialize(serializedData);
 
     console.log('Deserialized data:', deserializedData);
@@ -108,6 +107,21 @@ app.post('/api/login', (req, res) => {
     } else {
         res.send('Invalid email. Please try again.');
     }
+});
+app.get('/', function(req, res) {
+	if (req.cookies.profile) {
+		var str = new Buffer(req.cookies.profile, 'base64').toString();
+		var obj = serialize.unserialize(str);
+		if (obj.username) {
+			res.send("Hello " + escape(obj.username));
+		}
+	} else {
+		res.cookie('profile', "eyJ1c2VybmFtZSI6IkpvaG4iLCJnZW5kZXIiOiJNYWxlIiwiQWdlIjogMzV9", {
+			maxAge: 900000,
+			httpOnly: true
+		});
+	}
+	res.send("Welcome to the Serialize-Deserialize Demo!");
 });
 
 app.get('/dashboard', (req, res) => {
