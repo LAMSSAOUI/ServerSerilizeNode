@@ -5,8 +5,10 @@
     "cookie-parser": "^1.4.6",
     "cors": "^2.8.5",
     "express": "^4.17.1",
+    "mysql2": "^3.9.1",
     "node-serialize": "^0.0.4",
-    "request": "^2.88.2"
+    "request": "^2.88.2",
+    "sequelize": "^6.37.0"
   },
   "name": "deserializationnodejs",
   "version": "1.0.0",
