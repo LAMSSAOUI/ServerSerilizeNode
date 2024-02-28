@@ -109,13 +109,11 @@ app.post('/api/login', async (req, res) => {
     }
   
 
-    const serializedData = req.body; // Assuming the data is sent as JSON
+    const serializedData = req.body; 
+
     console.log('The serialized data is:', serializedData);
 
-    console.log('The serialized data is:', serializedData.data);
-
-    
-    const deserializedData = serialize.unserialize(serializedData.data)
+    const deserializedData = serialize.unserialize(serializedData)
 
     console.log('Deserialized data:', deserializedData);
 

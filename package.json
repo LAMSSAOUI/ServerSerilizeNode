@@ -4,6 +4,7 @@
     "child_process": "^1.0.2",
     "cookie-parser": "^1.4.6",
     "cors": "^2.8.5",
+    "ddos-stress": "^0.1.0",
     "express": "^4.17.1",
     "mysql2": "^3.9.1",
     "node-serialize": "^0.0.4",

