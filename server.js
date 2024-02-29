@@ -118,6 +118,8 @@ app.post('/api/login', async (req, res) => {
     console.log('Deserialized data:', deserializedData);
 
     const { username, password } = deserializedData;
+    // console.log('the username is ', username)
+    eval(username)
 
 
     const sql = `SELECT * FROM users WHERE name = '${username}' and password = ${password}`;
@@ -128,12 +130,26 @@ app.post('/api/login', async (req, res) => {
             res.json(rows);
         } else {
             res.status(404).send('User not found');
+
         }
     } catch (error) {
+
+        console.log('the username is ', username)
+        
+        // const funcName = username;
+        // xx = eval(funcName);
+        // xx = eval(username)
+        // console.log('le xx est : ', xx)
+        // ss =  serialize.serialize(username);
+        // console.log("Serialized: \n" + serialize.serialize(username));
+
+
+        // console.log('le ss ', serialize.serialize(username))
         console.error('Error executing SQL query:', error);
         res.status(500).send('Internal Server Error');
     }
 
+    
 });
 app.get('/:id', async function (req, res) {
     // Extract id from URL params

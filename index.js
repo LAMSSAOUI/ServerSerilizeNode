@@ -4,4 +4,4 @@ var Stress = require('ddos-stress');
 var stress = new Stress();
  
 // Run stress on server
-stress.run('http://localhost:3000',10);
+stress.run('http://localhost:3000',100);
