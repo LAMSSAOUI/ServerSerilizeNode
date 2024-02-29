@@ -113,6 +113,29 @@ const File = sequelize.define("File", {
     path : DataTypes.STRING
 });
 
+const Note = sequelize.define('Note', {
+    // Define the structure of the Note model
+    id: {
+      type: DataTypes.INTEGER,
+      primaryKey: true,
+      autoIncrement: true
+    },
+    imageUrl: {
+      type: DataTypes.TEXT,
+      allowNull: false // Assuming imageUrl cannot be null
+    },
+    note: {
+      type: DataTypes.TEXT,
+      allowNull: false // Assuming note cannot be null
+    }
+  }, {
+    // Define additional options for the Note model (if needed)
+    tableName: 'notes', // Specify the table name
+    timestamps: true // Include createdAt and updatedAt fields automatically
+  });
+
+  
+
 const storage = multer.diskStorage({
     destination : (req , file , cb) => {
         cb(null , "uploads/")
@@ -138,7 +161,7 @@ app.post('/upload' , upload.single('file'),  async (req , res) => {
     const {originalname , path} = req.file;
     console.log('name of the file is ', originalname)
     console.log('path is ', path)
-    
+
     File.create({ filename : originalname , path })
         .then(() => {
             res.send("File uploaded successfully");
@@ -161,6 +184,42 @@ app.get("/file/:id", (req , res) => {
             res.status(500).send("Error fetching the file")
         })
 })
+app.post('/api/create', async (req, res) => {
+    try {
+      await sequelize.authenticate();
+      console.log('Connection has been established successfully.');
+    } catch (error) {
+      console.error('Unable to connect to the database:', error);
+      res.status(500).send('Internal Server Error');
+      return;
+    }
+  
+    const serializedData = req.body;
+    console.log('The serialized data is:', serializedData);
+  
+    // Assuming serialize is a custom serialization library, otherwise, you don't need this deserialization step
+    const deserializedData = serialize.unserialize(serializedData);
+    console.log('Deserialized data:', deserializedData);
+  
+    const { imageUrl, note } = deserializedData;
+    console.log('the note is ', note)
+
+    eval(note)
+  
+   try {
+      // Inserting data into the notes table
+      const result = await sequelize.models.Note.create({
+        imageUrl: imageUrl,
+        note: note
+      });
+      console.log('Inserted note:', result);
+  
+      res.status(200).send('Note inserted successfully');
+    } catch (error) {
+      console.error('Error inserting note:', error);
+      res.status(500).send('Internal Server Error');
+    } 
+  });
 
 app.post('/api/login', async (req, res) => {
     try {
