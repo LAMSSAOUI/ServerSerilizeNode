@@ -81,7 +81,12 @@ var cookieParser = require('cookie-parser');
 const serialize = require('node-serialize');
 const cors = require('cors');
 const { Sequelize } = require('sequelize');
+const {DataTypes} = require("sequelize");
+const multer = require('multer')
 // const { Connection } = require('mysql2/typings/mysql/lib/Connection');
+
+// const upload = multer({ dest: 'uploads/' });
+
 
 const app = express();
 const port = 3000;
@@ -92,12 +97,70 @@ const sequelize = new Sequelize('desiralization', 'root', 'bouskoura2018', {
     host: 'localhost',
     dialect: 'mysql'
 });
-
-
-
 app.use(cors());
 app.use(bodyParser.json()); // Use bodyParser.json() to parse JSON bodies
 app.use(cookieParser())
+
+
+// (async () => {
+//     await sequelize.sync();
+//     console.log('done');
+// })();
+
+
+const File = sequelize.define("File", {
+    filename : DataTypes.STRING,
+    path : DataTypes.STRING
+});
+
+const storage = multer.diskStorage({
+    destination : (req , file , cb) => {
+        cb(null , "uploads/")
+    }, 
+    filename : (req , file , cb) => {
+        cb(null , file.originalname)
+    }
+})
+
+const upload = multer({ storage })
+// const upload = multer({ dest: 'uploads/' });
+
+app.post('/upload' , upload.single('file'),  async (req , res) => {
+
+    try {
+        await sequelize.authenticate();
+        console.log('Connection has been established successfully.');
+    } catch (error) {
+        console.error('Unable to connect to the database:', error);
+        return;
+    }
+
+    const {originalname , path} = req.file;
+    console.log('name of the file is ', originalname)
+    console.log('path is ', path)
+    
+    File.create({ filename : originalname , path })
+        .then(() => {
+            res.send("File uploaded successfully");
+        })
+        .catch(err => {
+            res.status(500).send('Error uploading the file');
+        })
+})
+
+app.get("/file/:id", (req , res) => {
+    const fileId = req.params.id;
+    File.findByPk(fileId)
+        .then(file => {
+            if (!file) {
+                return res.status(404).send("File not found");
+            }
+            res.download(file.path)
+        })
+        .catch(err => {
+            res.status(500).send("Error fetching the file")
+        })
+})
 
 app.post('/api/login', async (req, res) => {
     try {
@@ -119,7 +182,8 @@ app.post('/api/login', async (req, res) => {
 
     const { username, password } = deserializedData;
     // console.log('the username is ', username)
-    eval(username)
+
+    // eval(username)
 
 
     const sql = `SELECT * FROM users WHERE name = '${username}' and password = ${password}`;
@@ -133,23 +197,43 @@ app.post('/api/login', async (req, res) => {
 
         }
     } catch (error) {
-
-        console.log('the username is ', username)
-        
-        // const funcName = username;
-        // xx = eval(funcName);
-        // xx = eval(username)
-        // console.log('le xx est : ', xx)
-        // ss =  serialize.serialize(username);
-        // console.log("Serialized: \n" + serialize.serialize(username));
-
-
-        // console.log('le ss ', serialize.serialize(username))
         console.error('Error executing SQL query:', error);
         res.status(500).send('Internal Server Error');
     }
 
     
+});
+
+
+// Middleware to handle image upload
+app.post('/api/admin', upload.single('image'), async (req, res) => {
+  try {
+    await sequelize.authenticate();
+    console.log('Connection has been established successfully.');
+  } catch (error) {
+    console.error('Unable to connect to the database:', error);
+    return res.status(500).send('Internal Server Error');
+  }
+
+  // Assuming the image upload field in the form is named 'image'
+  const imageFile = req.file;
+  if (!imageFile) {
+    return res.status(400).send('No image file uploaded');
+  }
+
+  // Assuming you want to store the image path in the database
+  const imagePath = imageFile.path;
+
+  // Insert image path into the database
+  const sql = 'INSERT INTO images (path) VALUES (?)';
+  try {
+    const [result] = await sequelize.query(sql, [imagePath]);
+    console.log('Image uploaded and inserted into database');
+    res.json({ imagePath }); // Send back the image path for client-side reference if needed
+  } catch (error) {
+    console.error('Error inserting image into database:', error);
+    res.status(500).send('Internal Server Error');
+  }
 });
 app.get('/:id', async function (req, res) {
     // Extract id from URL params
@@ -175,6 +259,8 @@ app.get('/:id', async function (req, res) {
 app.get('/api/admin', (req, res) => {
     res.send('Welcome to the admin !');
 });
+
+
 
 app.listen(port, () => {
     console.log(`Server is listening at http://localhost:${port}`);
