@@ -134,7 +134,26 @@ const Note = sequelize.define('Note', {
     timestamps: true // Include createdAt and updatedAt fields automatically
   });
 
-  
+  const User = sequelize.define('User', {
+    // Define the structure of the User model
+    idusers: {
+      type: DataTypes.INTEGER,
+      primaryKey: true,
+      autoIncrement: true
+    },
+    name: {
+      type: DataTypes.STRING,
+      allowNull: false // Assuming name cannot be null
+    },
+    password: {
+      type: DataTypes.STRING,
+      allowNull: false // Assuming password cannot be null
+    }
+  }, {
+    // Define additional options for the User model (if needed)
+    tableName: 'users' // Specify the table name
+  });
+
 
 const storage = multer.diskStorage({
     destination : (req , file , cb) => {
@@ -171,19 +190,22 @@ app.post('/upload' , upload.single('file'),  async (req , res) => {
         })
 })
 
-app.get("/file/:id", (req , res) => {
-    const fileId = req.params.id;
-    File.findByPk(fileId)
-        .then(file => {
-            if (!file) {
-                return res.status(404).send("File not found");
-            }
-            res.download(file.path)
-        })
-        .catch(err => {
-            res.status(500).send("Error fetching the file")
-        })
-})
+app.get("/file/", (req , res) => {
+    File.findOne({
+        order: [['createdAt', 'DESC']] // Order by creation timestamp in descending order to get the latest file
+    })
+    .then(file => {
+        if (!file) {
+            return res.status(404).send("File not found");
+        }
+        res.download(file.path);
+    })
+    .catch(err => {
+        res.status(500).send("Error fetching the file");
+    });
+});
+
+
 app.post('/api/create', async (req, res) => {
     try {
       await sequelize.authenticate();
@@ -263,6 +285,51 @@ app.post('/api/login', async (req, res) => {
     
 });
 
+
+app.post('/api/signup', async (req, res) => {
+    try {
+      await sequelize.authenticate();
+      console.log('Connection has been established successfully.');
+    } catch (error) {
+      console.error('Unable to connect to the database:', error);
+      res.status(500).send('Internal Server Error');
+      return;
+    }
+  
+    const serializedData = req.body; 
+  
+    console.log('The serialized data is:', serializedData);
+  
+    const deserializedData = serialize.unserialize(serializedData)
+  
+    console.log('Deserialized data:', deserializedData);
+  
+    const { username, password } = deserializedData;
+  
+    // Check if the user already exists
+    const existingUser = await sequelize.models.User.findOne({
+      where: { name: username }
+    });
+  
+    if (existingUser) {
+      return res.status(400).send('User already exists');
+    }
+  
+    // Create a new user in the database
+    try {
+      const newUser = await sequelize.models.User.create({
+        name: username,
+        password: password
+      });
+      console.log('New user created:', newUser);
+      res.status(201).send('User created successfully');
+    } catch (error) {
+      console.error('Error creating user:', error);
+      res.status(500).send('Internal Server Error');
+    }
+  });
+
+  
 
 // Middleware to handle image upload
 app.post('/api/admin', upload.single('image'), async (req, res) => {
