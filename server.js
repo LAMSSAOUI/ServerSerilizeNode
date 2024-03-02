@@ -213,22 +213,31 @@ app.get("/file/", (req , res) => {
             return res.status(404).send("File not found");
         }
         console.log('file is ', file)
-        // const imageId = 123  
-        // res.setHeader('Image-ID', imageId);
-        // const { id } = file.id;
-        // res.download(file.path, `file_${id}`);
-
         res.download(file.path);
-        
-        // Set the ID in the response headers
-        
 
-        
     })
     .catch(err => {
         res.status(500).send("Error fetching the file");
     });
 });
+
+app.get("/Imageid/", (req , res) => {
+    File.findOne({
+        order: [['createdAt', 'DESC']] // Order by creation timestamp in descending order to get the latest file
+    })
+    .then(file => {
+        if (!file) {
+            return res.status(404).send("File not found");
+        }
+        console.log('file is ', file)
+        res.json(file.dataValues);
+
+    })
+    .catch(err => {
+        res.status(500).send("Error fetching the file");
+    });
+});
+
 
 
 app.post('/api/create', async (req, res) => {
@@ -320,7 +329,7 @@ app.post('/api/login', async (req, res) => {
 
 app.get('/notesImage/:idimage', async (req, res) => {
     const {idimage} = req.params;
-    const fullImageUrl = `blob:http://localhost:3001/${idimage}`;
+    // const fullImageUrl = `blob:http://localhost:3001/${idimage}`;
     try {
         await sequelize.authenticate();
         console.log('Connection has been established successfully.');
@@ -329,7 +338,7 @@ app.get('/notesImage/:idimage', async (req, res) => {
         return;
     }
 
-        sql = `select * from notes where imageUrl = '${fullImageUrl}';`
+        sql = `select * from notes where imageid = '${idimage}';`
         try {
             const [rows] = await sequelize.query(sql);
             console.log('rows are ', rows)
