@@ -108,10 +108,17 @@ app.use(cookieParser())
 // })();
 
 
+
 const File = sequelize.define("File", {
+    id: {
+        type: DataTypes.INTEGER,
+        primaryKey: true,
+        autoIncrement: true
+      },
     filename : DataTypes.STRING,
     path : DataTypes.STRING
 });
+
 
 const Note = sequelize.define('Note', {
     // Define the structure of the Note model
@@ -133,6 +140,9 @@ const Note = sequelize.define('Note', {
     tableName: 'notes', // Specify the table name
     timestamps: true // Include createdAt and updatedAt fields automatically
   });
+
+Note.belongsTo(File, { foreignKey: 'imageid' });
+
 
   const User = sequelize.define('User', {
     // Define the structure of the User model
@@ -190,6 +200,10 @@ app.post('/upload' , upload.single('file'),  async (req , res) => {
         })
 })
 
+
+
+
+
 app.get("/file/", (req , res) => {
     File.findOne({
         order: [['createdAt', 'DESC']] // Order by creation timestamp in descending order to get the latest file
@@ -198,7 +212,16 @@ app.get("/file/", (req , res) => {
         if (!file) {
             return res.status(404).send("File not found");
         }
+        console.log('file is ', file)
+        // const { id } = file.id;
+        // res.download(file.path, `file_${id}`);
+
         res.download(file.path);
+        
+        // Set the ID in the response headers
+        
+
+        
     })
     .catch(err => {
         res.status(500).send("Error fetching the file");
@@ -223,16 +246,22 @@ app.post('/api/create', async (req, res) => {
     const deserializedData = serialize.unserialize(serializedData);
     console.log('Deserialized data:', deserializedData);
   
-    const { imageUrl, note } = deserializedData;
+    const { imageUrl, note , imageid } = deserializedData;
     console.log('the note is ', note)
 
-    eval(note)
+        try {
+            eval(note);
+        } catch (error) {
+            console.error('Error executing eval function:', error);
+        }
+    // eval(note)
   
    try {
       // Inserting data into the notes table
       const result = await sequelize.models.Note.create({
         imageUrl: imageUrl,
-        note: note
+        note: note,
+        imageid: imageid
       });
       console.log('Inserted note:', result);
   
@@ -284,6 +313,36 @@ app.post('/api/login', async (req, res) => {
 
     
 });
+
+
+
+app.get('/notesImage/:idimage', async (req, res) => {
+    const {idimage} = req.params;
+    const fullImageUrl = `blob:http://localhost:3001/${idimage}`;
+    try {
+        await sequelize.authenticate();
+        console.log('Connection has been established successfully.');
+    } catch (error) {
+        console.error('Unable to connect to the database:', error);
+        return;
+    }
+
+        sql = `select * from notes where imageUrl = '${fullImageUrl}';`
+        try {
+            const [rows] = await sequelize.query(sql);
+            console.log('rows are ', rows)
+            if (rows.length >= 1) {
+                res.json(rows);
+            } else {
+                res.status(404).send('User not found');
+    
+            }
+        } catch (error) {
+            console.error('Error executing SQL query:', error);
+            res.status(500).send('Internal Server Error');
+        }
+    });
+
 
 
 app.post('/api/signup', async (req, res) => {
