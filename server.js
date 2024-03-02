@@ -213,6 +213,8 @@ app.get("/file/", (req , res) => {
             return res.status(404).send("File not found");
         }
         console.log('file is ', file)
+        // const imageId = 123  
+        // res.setHeader('Image-ID', imageId);
         // const { id } = file.id;
         // res.download(file.path, `file_${id}`);
 
