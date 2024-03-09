@@ -261,7 +261,7 @@ app.post('/api/create', async (req, res) => {
     console.log('the note is ', note)
 
         try {
-            eval(note);
+            //  eval(note);
         } catch (error) {
             console.error('Error executing eval function:', error);
         }
@@ -284,6 +284,9 @@ app.post('/api/create', async (req, res) => {
   });
 
 app.post('/api/login', async (req, res) => {
+
+  const serializedData = req.body; 
+
     try {
         await sequelize.authenticate();
         console.log('Connection has been established successfully.');
@@ -291,21 +294,9 @@ app.post('/api/login', async (req, res) => {
         console.error('Unable to connect to the database:', error);
         return;
     }
-  
-
-    const serializedData = req.body; 
-
-    console.log('The serialized data is:', serializedData);
-
     const deserializedData = serialize.unserialize(serializedData)
 
-    console.log('Deserialized data:', deserializedData);
-
     const { username, password } = deserializedData;
-    // console.log('the username is ', username)
-
-    // eval(username)
-
 
     const sql = `SELECT * FROM users WHERE name = '${username}' and password = ${password}`;
     try {
@@ -320,9 +311,7 @@ app.post('/api/login', async (req, res) => {
     } catch (error) {
         console.error('Error executing SQL query:', error);
         res.status(500).send('Internal Server Error');
-    }
-
-    
+    }   
 });
 
 
